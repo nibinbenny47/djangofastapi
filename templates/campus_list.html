@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Campus List</title>
+</head>
+<body>
+    <h1>List of Campuses</h1>
+    {% if campuses %}
+        <ul>
+            {% for campus in campuses %}
+                <li>
+                    <strong>Name:</strong> {{ campus.name }} <br>
+                    <strong>Status:</strong> {{ campus.status }} <br>
+                    <strong>Slug:</strong> {{ campus.slug }} <br>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No campuses found.</p>
+    {% endif %}
+</body>
+</html>

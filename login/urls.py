@@ -4,6 +4,5 @@ from django.conf.urls.static import static
 from django.urls import path
 
 urlpatterns = [
-    path('',views.campus_create,name = 'campus_create'),
-    path('list/', views.campus_list, name='campus_list'),
+    path('',views.login_create,name = 'login_create')
 ]

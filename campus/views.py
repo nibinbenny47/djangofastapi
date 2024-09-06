@@ -5,6 +5,27 @@ from django.urls import reverse
 from django.conf import settings
 from .forms import CampusForm
 
+def campus_list(request):
+    # Fetch access token from the session
+    # access_token = request.session.get('access_token')
+    # if not access_token:
+    #     return redirect('login')
+
+    # Fetch campus list from FastAPI
+    response = requests.get(
+        f'{settings.FASTAPI_URL}/campus/', 
+        
+    )
+
+    if response.status_code == 200:
+        campuses = response.json()  # Assuming FastAPI returns a JSON response
+    else:
+        campuses = []
+    
+    # Pass campuses to the template for rendering
+    return render(request, 'campus_list.html', {'campuses': campuses})
+
+
 def campus_create(request):
     if request.method == 'POST':
         print("hi")
@@ -35,5 +56,7 @@ def campus_create(request):
     else:
         form = CampusForm()
     return render(request,'submit_campus.html',{'form':form})
+
+
 
 # Create your views here.
