@@ -6,7 +6,7 @@ from .forms import CampusForm
 from .models import campus
 
 class CampusAdmin(admin.ModelAdmin):
-    form = CampusForm
+    # form = CampusForm
 
     def save_model(self, request, obj, form, change):
         access_token = request.session.get('access_token')
@@ -33,8 +33,30 @@ class CampusAdmin(admin.ModelAdmin):
         else:
             self.message_user(request, f"Error: {response.json()}", level='error')
 
+    list_display = ('name', 'status', 'slug')  # Adjust according to your model fields
+
     def get_queryset(self, request):
-        return campus.objects.none()  # Disable querying from Django's database
+        # Fetch campuses from FastAPI
+        response = requests.get(f'{settings.FASTAPI_URL}/campus/')
+
+        if response.status_code == 200:
+            campuses = response.json()
+            # Update or create Campus model instances
+            for campus_data in campuses:
+                # Assuming 'id' is a unique identifier and is part of the campus_data
+                campus.objects.update_or_create(
+                    # id=campus_data['_id'],  # Use 'id' or another unique field for matching
+                    defaults={
+                        'name': campus_data.get('name'),
+                        'status': campus_data.get('status'),
+                        'slug': campus_data.get('slug'),
+                    }
+                )
+            # Return queryset of Campus objects
+            return campus.objects.all()
+        else:
+            self.message_user(request, f"Error: {response.json()}", level='error')
+            return campus.objects.none()  # Return empty queryset in case of an error
 
 # Register your Campus model with the customized admin
 admin.site.register(campus, CampusAdmin)

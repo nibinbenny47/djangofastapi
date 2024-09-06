@@ -1,44 +1,27 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .forms import CustomUserCreationForm
-from django.contrib.auth.models import User
-import requests
-from django.conf import settings
-
-# Register your models here.
+from .models import User
+from .forms import RegisterUser
 
 class CustomUserAdmin(UserAdmin):
-    add_form = CustomUserCreationForm  # Use the custom form when adding a user
+    add_form = RegisterUser
+    model = User
+    fieldsets = (
+        (None, {'fields': ('email', 'username', 'password')}),
+        ('Personal info', {'fields': ('phone', 'date_of_birth', 'address', 'profile_image')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
     add_fieldsets = (
         (None, {
-            'fields': ('username', 'email', 'full_name', 'password1', 'password2','phone'),
-        }),
+            'classes': ('wide',),
+            'fields': ('email', 'username', 'phone', 'date_of_birth', 'address', 'profile_image',  'password1', 'password2', 'is_staff', 'is_active')}
+        ),
     )
+    list_display = ('email', 'username', 'groups', 'is_staff', 'is_active')
+    search_fields = ('email', 'username')
+    ordering = ('email',)
+    filter_horizontal = ()
 
-    def save_model(self, request, obj, form, change):
-        # Save the user in Django's database
-        super().save_model(request, obj, form, change)
 
-        # Prepare the data to send to FastAPI
-        user_data = {
-            'username': form.cleaned_data['username'],
-            'email': form.cleaned_data['email'],
-            'full_name': form.cleaned_data['full_name'],
-            'password': form.cleaned_data['password1'],
-            'phone':form.cleaned_data['phone'], # Sending plain password (you may hash it before sending to FastAPI),
-        }
-
-        # Send the data to FastAPI to store in MongoDB
-        try:
-            response = requests.post(
-                f'{settings.FASTAPI_URL}/auth/register',
-                data=user_data)
-            if response.status_code != 200:
-                raise Exception(f"Failed to register user in FastAPI: {response.content}")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error communicating with FastAPI: {e}")
-        
-# Unregister the old User admin and register the new one
-admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
-
